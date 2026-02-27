@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    a{
+        text-decoration: none;
+    }
+    html,body{
+        margin: 0;
+        height: 100%;
+        scroll-behavior: smooth;
+    }
+    .header1{
+        position:fixed;
+        height: 6vw;
+        width: 100vw;
+        background-color: white;
+        box-sizing: border-box;
+        z-index: 5;
+    }
+    .text-KinoWatch{
+        box-sizing: border-box;
+        font-size: 2vw;
+        transform: translate(1050%,150%);
+        width: 1.3vw;
+        height: 1.3vw;
+    }
+    .btn-login{
+        position: relative;
+        background-color: rgb(235, 234, 234);
+        height: 2vw;
+        width: 5vw;
+        transform: translate(1850%,50%);
+        box-sizing: border-box;
+        padding-left:1vw;
+        padding-top: 0.3vw;
+        color: black;
+        border-radius: 10px;
+        z-index: 3;
+        cursor: pointer;
+    }
+    .btn-login:hover{
+        background-color:rgb(150, 44, 249) ;
+        color: white;
+        transition: 0.6s;
+    }
+    .palka{
+        position: fixed;
+        background-color: black;
+        width: 100vw;
+        height: 0.2vw;
+        transform: translate(0%,3000%);
+        box-sizing: border-box;
+        z-index: 5;
+    }
+    
+ dialog{
+border: none;
+border-radius: 8px;
+padding: 10px;
+box-shadow: 0 0 10px rgba(0,0,0,0.5);
+ }
+ dialog::backdrop{
+    background: rgba(0,0,0,0.6);
+ }
+ .strelka img{
+    position: fixed;
+    box-sizing: border-box;
+    width: 3vw;
+    height: 3vw;
+    transform: translate(3150%,1500%);
+    cursor: pointer;
+    z-index: 6;
+ }
+ .modal-content input {
+  margin-bottom: 1vw; /* Отступ между инпутами и кнопкой */
+  padding: 0.3vw;
+  
+  color: white;
+  border-radius: 5px;
+}
+.modal-content button {
+  margin-top: 1vw; /* Небольшой доп. отступ сверху для кнопки */
+  padding: 0.7vw;
+  background-color: rgb(150, 44, 249);
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}
+ .modal {
+  display: none;
+  position: fixed;
+  z-index: 10;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 15% auto;
+  padding: 20px;
+  width: 28vw;
+  height: 15vw;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  right: 15px; top: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+#accountName{
+    position: relative;
+    display: inline-block;
+    transform: translate(70%,-50%);
+    font-size: 1.4vw;
+}
+.avatar{
+    transform: translate(20%,-90%);
+    cursor: pointer;
+}
+.avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Окно спрятано слева */
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -300px; /* Прячем за левый край экрана */
+    width: 300px;
+    height: 100vh;
+    background: #fff;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+    transition: left 0.4s ease-out; /* Плавный сдвиг вправо */
+    z-index: 9999;
+}
+
+/* Когда добавляем этот класс, окно выезжает */
+.side-menu.active {
+    left: 0;
+}
+
+.menu-content {
+    padding: 25px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+</style>
+
+<body>
+   <header class="header1">
+<div class="text-KinoWatch">KinoWatch</div>
+<div class="btn-login" id="openReg">Войти</div>
+<div id="accountName" style="display: none; font-weight: bold;"></div>
+<img class="avatar" id="userAvatar" src="/png-klev-club-2a76-p-tri-poloski-menyu-png-11.png" onclick="toggleMenu()" style="display: none; width: 4.5vw; height: 4.5vw; border-radius: 50%;">
+<div id="regModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <h2>Регистрация</h2>
+    <form>
+      <input type="text" id="userName" placeholder="Логин" required><br>
+      <input type="password" placeholder="Пароль" required><br>
+      <button type="submit">Создать аккаунт</button>
+    </form>
+  </div>
+</div>
+
+   </header> 
+   
+<!-- Окно, которое выедет слева -->
+<div id="leftMenu" class="side-menu">
+    <div class="menu-content">
+        <h3>Личный кабинет</h3>
+        <ul>
+            <li>Мои билеты</li>
+            <li onclick="toggleMenu()" style="cursor:pointer; color: red;">Закрыть</li>
+        </ul>
+    </div>
+</div>
+
+   <div class="strelka" onclick="window.scrollTo({top:0,behavior:'smooth'})"><img src="icons8-стрелка-вверх-50.png"></a></div>
+   <section class="palka"></section>
+<script>
+const modal = document.getElementById("regModal");
+const btn = document.getElementById("openReg");
+const closeBtn = document.querySelector(".close-btn");
+
+const form = modal.querySelector("form");
+const input = modal.querySelector('input[type="text"]');
+const display = document.getElementById("accountName");
+const avatar = document.getElementById("userAvatar"); // Находим фото
+
+btn.onclick = () => {
+  if (btn.innerText === "Выйти") {
+    btn.innerText = "Войти";
+    display.innerText = "";
+    display.style.display = "none";
+    
+    // Прячем и очищаем фото при выходе
+    avatar.style.display = "none";
+    avatar.src = "";
+  } else {
+    modal.style.display = "block";
+  }
+};
+
+closeBtn.onclick = () => modal.style.display = "none";
+
+form.onsubmit = (event) => {
+  event.preventDefault(); 
+  const name = input.value; 
+
+  btn.innerText = "Выйти";
+  display.innerText = "Привет! " + name; 
+  display.style.display = "block"; 
+
+  // ПОКАЗЫВАЕМ ФОТО
+  avatar.src = "png-klev-club-2a76-p-tri-poloski-menyu-png-11.png"; // Замени на путь к своей картинке
+  avatar.style.display = "block";
+
+  modal.style.display = "none";
+  form.reset();
+};
+
+function toggleMenu() {
+    const menu = document.getElementById('leftMenu');
+    menu.classList.toggle('active');
+}
+
+</script>
+   <style>
+.sec1{
+    position: relative;
+    width: 5vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.4vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec2{
+    position: relative;
+    width: 7vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.1vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec3{
+    position: relative;
+    width: 6vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.1vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec4{
+    position: relative;
+    width: 8vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 0.8vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec5{
+    position: relative;
+    width: 7vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+    
+}
+.sec6{
+    position: relative;
+    width: 8vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.1vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec7{
+    position: relative;
+    width: 6vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.1vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec8{
+    position: relative;
+    width: 9.5vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 0.8vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+}
+.sec9{
+    position: relative;
+    width: 10vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.4vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+    padding-left: 1vw;
+    padding-right: 1vw;
+}
+.sec10{
+    position: relative;
+    width: 10vw;
+    height: 2.5vw;
+    background-color: white;
+    transform: translate(0%,280%);
+    border-radius: 15px;
+    font-size:1.3vw ;
+    box-sizing: border-box;
+    padding-left: 1.4vw;
+    padding-top: 0.5vw;
+    color: black;
+    cursor: pointer;
+    padding-left: 1vw;
+    padding-right: 1vw;
+}
+.section1{
+    position: relative;
+    box-sizing: border-box;
+    justify-content: space-evenly;
+    display: flex;
+    height: 10vw;
+     
+}
+.sec1,.sec2,.sec3,.sec4,.sec5,.sec6,.sec7,.sec8,.sec9,.sec10:hover{
+transition: 0.3s;
+}
+.a-btn1,.a-btn2,.a-btn3,.a-btn4,.a-btn5{
+    color: black;
+    cursor: pointer;
+}
+
+   </style>
+   <section class="section1" id="section1">
+   <section class="sec1" id="sec1" data-genre="all" onclick="paint(this)">Все</section>
+   <section class="sec2" id="sec2" data-genre="komedy" onclick="paint(this)">Комедия</section>
+   <section class="sec3" id="sec3" data-genre="horror" onclick="paint(this)">Ужасы</section>
+   <section class="sec4" id="sec4" data-genre="fantazy" onclick="paint(this)">Фантастика</section>
+   <section class="sec5" id="sec5" data-genre="detective" onclick="paint(this)">Детектив</section>
+   <section class="sec6" id="sec6" data-genre="romantic" onclick="paint(this)">Мелодрама</section>
+   <section class="sec7" id="sec7" data-genre="action" onclick="paint(this)">Экшен</section>
+   <section class="sec8" id="sec8" data-genre="adventure" onclick="paint(this)">Приключение</section>
+   <section class="sec9" id="sec9" data-genre="historical" onclick="paint(this)">Исторический</section>
+   <section class="sec10" id="sec10" data-genre="kartoon" onclick="paint(this)">Мультфильм</section>
+</section>
+<script>
+    
+    const elements=[
+        document.getElementById('sec1'),
+        document.getElementById('sec2'),
+        document.getElementById('sec3'),
+        document.getElementById('sec4'),
+        document.getElementById('sec5'),
+        document.getElementById('sec6'),
+        document.getElementById('sec7'),
+        document.getElementById('sec8'),
+        document.getElementById('sec9'),
+        document.getElementById('sec10'),
+    ];
+    if(elements[0]) elements[0].style.backgroundColor="rgb(150, 44, 249)";
+    if(elements[0]) elements[0].style.color="white";
+    elements.forEach(item=>{
+        if(item){
+            item.onclick=function(){
+                elements.forEach(el=>{
+                    if(el)el.style.backgroundColor="white";
+                    if(el)el.style.color="black";
+                });
+                this.style.backgroundColor="rgb(150, 44, 249)"
+                this.style.color="white"
+            };
+        }
+    });
+
+    
+</script>
+<style>
+    
+    .section2{
+position: relative;
+box-sizing: border-box;
+height: 350%;
+transform: translate(0%,0%);
+display: grid;
+grid-template-columns: repeat(6, 1fr);
+gap: 3vw;
+padding: 3vw;
+width: 100%;
+padding-right: 10%;
+overflow: hidden;
+z-index: 1;
+align-content: start;
+    }
+    .kino1{
+        position: relative;
+        background-color: rgb(197, 194, 194);
+        width: 11vw;
+        height: 17vw;
+        transform: translate(65%,10%);
+        box-sizing: border-box;
+        z-index: 6;
+        border-radius: 15px;
+        box-shadow: 0px 6px 24px grey;
+        border: 1px solid black;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .kino1:hover{
+        transform:translate(65%,10%) scale(1.03);
+    }
+    .kino1 img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Заполняет всю площадь, обрезая лишнее без искажения пропорций */
+    border-radius: 15px; /* Должно совпадать с радиусом родителя */
+    display: block; /* Убирает лишний отступ снизу */
+}
+.cinema-popup-wrap {
+    display: none; 
+    position: fixed;
+    z-index: 99999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+.cinema-popup-box {
+    background-color: #121212;
+    color: #fff;
+    margin: 10% auto;
+    padding: 30px;
+    width: 90%;
+    max-width: 650px;
+    border-radius: 20px;
+    position: relative;
+    animation: cinemaFadeIn 0.3s ease;
+}
+
+.cinema-flex-container { display: flex; gap: 30px; align-items: flex-start; }
+.cinema-main-img { width: 180px; border-radius: 12px; }
+
+/* Ряд с залом */
+.cinema-hall-row {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Название зала — НЕ кликабельно */
+.cinema-hall-label {
+    font-size: 20px;
+    font-weight: bold;
+    color: #888;
+    min-width: 70px;
+}
+
+/* Время — КЛИКАБЕЛЬНО */
+.cinema-time-btn {
+    background: #222;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #333;
+    color: white; /* Цвет времени */
+}
+
+.cinema-time-btn:hover {
+    background: rgb(150, 44, 249);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.cinema-title { font-size: 28px; margin: 0 0 10px 0; }
+.cinema-price-tag { color: #f1c40f; font-size: 22px; margin-bottom: 20px; }
+
+.cinema-close-icon {
+    position: absolute; right: 20px; top: 15px;
+    font-size: 40px; cursor: pointer; color: #555;
+}
+
+</style>
+
+<div class="section2">
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/6201401/022a58e3-5b9b-411b-bfb3-09fedb700401/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/1648503/2a000001985407ae29d78d310a475cce5519/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/10592371/7f0e6761-4635-46ad-b804-59d5cf1ae85c/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/1672343/2a0000019852d8e68839d924d7e098d0d1c2/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1599028/4adf61aa-3cb7-4381-9245-523971e5b4c8/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/236744/2a0000019850d86f94cbae727fe59f04604a/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/1648503/2a0000019a2f3f37929b4e5f588b166ebefe/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/2439731/2a00000198546aa6a5e1e324cc5e2d6ebe24/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1629390/f28c1ea2-47b0-49d5-b11c-9608744f0233/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1599028/53e53a08-3f1d-4169-a987-e00c25cd1622/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/223007/2a0000019852d9b7ac574d01a2caa9e409e3/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/10812607/a115270b-5380-4441-9fe4-43497d7d19a7/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/9784475/0f5f576b-33ba-4734-a76d-77c861bbfdb5/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1773646/894f7e3c-cedf-4e5c-946a-9021efdf17dd/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/2385704/2a0000019853ac176c415290b11ef7bb276d/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/2385704/2a0000019852d231670d02069ed490ee92d3/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/10703859/1e653cad-c84f-4617-b61e-949b3228ef36/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1946459/6e11a16e-c9e7-491f-9162-01098a7d8dd9/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1600647/430042eb-ee69-4818-aed0-a312400a26bf/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/12808873/2a0000019851197a0fb682db614241a0d959/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/12808873/2a000001985188c4bbdc31d71da1ec2572c6/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/374297/2a00000198542ac89e8a64e2c49820a04584/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/6201401/67232332-829f-4409-a668-2d38cb0b3b15/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1900788/6f631486-e947-487d-94d6-41c2b5a8f5a0/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/4483445/65178b69-a25d-4713-b8d4-c89caefb786f/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/236744/2a00000198542393beeb0c003ea37a0924fa/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/1672343/2a00000198533506a295968ec25385081168/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/6201401/8472ca52-2751-4bbe-9a08-8a1be75f93d5/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/212840/2a00000198a2e45a0029d39bfe9809144ff3/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1599028/cdd49af8-7ba4-42ee-9f92-10ba7e3d021b/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/2385704/2a00000198519aa598eae7010e59d3a0c34c/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1946459/5ae82f4b-fd6a-46b5-b5ba-897106eb1eae/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/1773646/1f7ccff8-ce03-40eb-b4ab-bdafa44e945b/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/12808873/2a00000198a2d3c5ea1953e085e1ae6f1a12/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-kinopoisk-image/10671298/77d0bfc5-5f27-4940-aba3-df2197de8815/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+    <section class="kino1"><img src="https://avatars.mds.yandex.net/get-ott/2385704/2a0000019aeee395436194162e8876082969/600x900" alt="" onclick="toggleCinemaPopup(this)"></section>
+</div>
+<div id="cinemaOverlay" class="cinema-popup-wrap">
+    <div class="cinema-popup-box">
+        <span class="cinema-close-icon" onclick="closePopup()">&times;</span>
+        
+        <div class="cinema-flex-container">
+            <!-- Сюда JS подставит фото того фильма, на который нажали -->
+            <img src="" id="dynamicPoster" class="cinema-main-img">
+            
+            <div class="cinema-details">
+                <h2 class="cinema-title">Бронирование билетов</h2>
+                <p class="cinema-price-tag">Цена: <b>2500 тг</b></p>
+                
+                <div class="cinema-schedule">
+                    <div class="cinema-hall-row">
+                        <span class="cinema-hall-label">Зал 1:</span>
+                        <span class="cinema-time-btn" onclick="book('10:00')">10:00</span>
+                        <span class="cinema-time-btn" onclick="book('14:00')">14:00</span>
+                        <span class="cinema-time-btn" onclick="book('18:00')">18:00</span>
+                    </div>
+                    <div class="cinema-hall-row">
+                        <span class="cinema-hall-label">Зал 2:</span>
+                        <span class="cinema-time-btn" onclick="book('12:00')">12:00</span>
+                        <span class="cinema-time-btn" onclick="book('16:00')">16:00</span>
+                        <span class="cinema-time-btn" onclick="book('19:00')">19:00</span>
+                    </div>
+                    <div class="cinema-hall-row">
+                        <span class="cinema-hall-label">Зал 3:</span>
+                        <span class="cinema-time-btn" onclick="book('13:00')">13:00</span>
+                        <span class="cinema-time-btn" onclick="book('17:00')">17:00</span>
+                        <span class="cinema-time-btn" onclick="book('20:00')">20:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- УНИВЕРСАЛЬНОЕ ОКНО (одно на все фильмы) -->
+<div id="cinemaOverlay" class="cinema-popup-wrap">
+    <div class="cinema-popup-box">
+        <span class="cinema-close-icon" onclick="closeCinemaPopup()">&times;</span>
+        <div class="cinema-flex-container">
+            <!-- Сюда JS подставит нужную картинку -->
+            <img src="" id="popupPoster" class="cinema-main-img">
+            
+            <div class="cinema-details">
+                <!-- Сюда JS подставит название -->
+                <h2 id="popupTitle" class="cinema-title"></h2>
+                <p class="cinema-price-tag">Цена: <b>2500 тг</b></p>
+                
+                <div class="cinema-schedule">
+                    <div class="cinema-hall-row">
+                        <span class="cinema-hall-label">Зал 1:</span>
+                        <span class="cinema-time-btn" onclick="bookTicket('10:00')">10:00</span>
+                        
+                    </div>
+                    <!-- Остальные залы... -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+const movies = document.querySelectorAll('.kino1');
+const genreButtons = document.querySelectorAll('.section1 > section');
+
+const genresMap = {
+    "all": "all",
+    "komedy": [0, 5, 12, 29],     
+    "horror": [1, 16, 25, 33],     
+    "fantazy": [4, 18, 23, 31],       
+    "detective": [8, 15, 22, 35],        
+    "romantic": [2, 19, 26, 34],         
+    "action": [3, 10, 20, 27],          
+    "adventure": [6, 7, 21, 32],       
+    "historical": [9, 14, 24, 28],
+    "kartoon": [11, 13, 17, 30],     
+};
+
+
+genreButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+        
+        const selectedGenre = this.getAttribute('data-genre');
+        const allowedIndices = genresMap[selectedGenre];
+
+        console.log("Выбран жанр:", selectedGenre); 
+
+        
+        movies.forEach((movie, index) => {
+            if (allowedIndices === "all" || (allowedIndices && allowedIndices.includes(index))) {
+                movie.style.display = 'block';
+            } else {
+                movie.style.display = 'none';
+            }
+        });
+    });
+});
+function toggleCinemaPopup(element) {
+    const overlay = document.getElementById("cinemaOverlay");
+    const dynamicImg = document.getElementById("dynamicPoster");
+
+    // Берем SRC картинки, на которую нажали, и ставим в модалку
+    dynamicImg.src = element.src;
+
+    // Показываем окно
+    overlay.style.display = "block";
+}
+
+function closePopup() {
+    document.getElementById("cinemaOverlay").style.display = "none";
+}
+
+
+// Закрытие по клику вне окна
+window.onclick = function(e) {
+    if (e.target === document.getElementById("cinemaOverlay")) {
+        closePopup();
+    }
+};
+
+</script>
+<style>
+    .seating-box { max-width: 800px; text-align: center; }
+.seating-title { margin-bottom: 20px; color: #fff; }
+
+.screen {
+    background: #444;
+    height: 10px;
+    width: 80%;
+    margin: 0 auto 40px;
+    border-radius: 50%;
+    box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+    color: #666;
+    font-size: 12px;
+    line-height: 50px;
+}
+
+.seating-container {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr); /* 15 мест */
+    gap: 8px;
+    margin-bottom: 30px;
+    perspective: 500px;
+    transform: translate(20%);
+}
+
+.seat {
+
+    width: 25px;
+    height: 25px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.seat:hover { background: #555; border-color: rgb(150, 44, 249); }
+.seat.selected { background: rgb(150, 44, 249); box-shadow: 0 0 10px rgb(150, 44, 249); }
+
+.seating-footer {
+    padding-top: 20px;
+    border-top: 1px solid #333;
+    font-size: 18px;
+}
+
+.cinema-btn-confirm {
+    background: rgb(150, 44, 249);
+    border: none;
+    padding: 10px 30px;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+#seatsGrid {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr); /* Ровно 15 колонок */
+    gap: 8px; /* Расстояние между креслами */
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* Эффект наведения на кресло */
+.cinema-seat-item:hover {
+    background: rgb(150, 44, 249) !important;
+    transform: scale(1.2);
+}
+
+</style>
+<div id="seatingOverlay" class="cinema-popup-wrap">
+    <div class="cinema-popup-box seating-box">
+        <span class="cinema-close-icon" onclick="closeSeating()">&times;</span>
+        
+        <h2 class="seating-title">Бронирование мест</h2>
+
+        <!-- Панель управления билетами -->
+        <div class="ticket-setup">
+            <span>Сколько билетов нужно?</span>
+            <div class="counter-wrapper">
+                <button onclick="changeLimit(-1)">-</button>
+                <strong id="limitVal">1</strong>
+                <button onclick="changeLimit(1)">+</button>
+            </div>
+        </div>
+
+        <div class="screen-box">
+            <div class="screen-line"></div>
+            <span>ЭКРАН</span>
+        </div>
+        
+        <div class="main-seating-layout">
+            <!-- Колонки с номерами рядов -->
+            <div id="rowLabels" class="row-labels-side"></div>
+            
+            <!-- Сама сетка кресел -->
+            <div id="seatsGrid" class="seats-grid-main"></div>
+        </div>
+
+        <div class="seating-footer">
+            <div class="selection-summary">
+                <span>Выбрано:</span>
+                <div id="selectedBadges" class="badges-container">
+                    <em style="color: #666;">места не выбраны</em>
+                </div>
+            </div>
+            <button class="cinema-btn-confirm" onclick="confirmBooking()">Забронировать</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .seating-box { 
+        max-width: 750px; background: #111; padding: 30px; 
+        border-radius: 20px; color: #fff; font-family: sans-serif; margin: auto;
+    }
+
+    /* Счетчик билетов */
+    .ticket-setup { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #222; padding: 15px 20px; border-radius: 12px; }
+    .counter-wrapper { display: flex; align-items: center; gap: 15px; }
+    .counter-wrapper button { width: 35px; height: 35px; border-radius: 8px; border: none; background: #333; color: #fff; cursor: pointer; font-size: 18px; }
+    .counter-wrapper button:hover { background: #962cf9; }
+    .counter-wrapper strong { font-size: 20px; min-width: 20px; text-align: center; }
+
+    /* Экран */
+    .screen-box { text-align: center; margin-bottom: 40px; }
+    .screen-line { height: 4px; background: linear-gradient(to right, transparent, #666, transparent); margin-bottom: 10px; border-radius: 2px; }
+    .screen-box span { font-size: 12px; color: #555; letter-spacing: 5px; }
+
+    /* Сетка */
+    .main-seating-layout { display: flex; gap: 15px; justify-content: center; }
+    .row-labels-side { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+    .row-num { height: 25px; line-height: 25px; font-size: 12px; color: #666; text-transform: uppercase; }
+
+    .seats-grid-main { 
+        display: grid; 
+        grid-template-columns: repeat(15, 25px); 
+        gap: 10px; 
+    }
+
+    /* Базовый стиль кресла */
+.seat-item { 
+    width: 25px; 
+    height: 25px; 
+    background: #333; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: 0.2s;
+    /* Решение проблемы: добавляем невидимую рамку сразу */
+    border: 1px solid transparent; 
+    box-sizing: border-box; 
+}
+
+/* Стиль при наведении */
+.seat-item:hover { 
+    background: #962cf9; 
+    /* Теперь рамка просто меняет цвет, а не появляется из ниоткуда */
+     
+    transform: scale(1.1); /* Небольшое увеличение без дергания соседей */
+    z-index: 10;
+}
+
+/* Выбранное место */
+.seat-item.selected { 
+    background: #962cf9 !important; 
+    border-color: #fff; /* Белая рамка для выделения */
+    box-shadow: 0 0 15px rgba(150, 44, 249, 0.5); 
+}
+    /* Бейджи выбранных мест */
+    .seating-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #222; display: flex; flex-direction: column; gap: 20px; }
+    .badges-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 35px; }
+    .seat-badge { background: #962cf9; padding: 5px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+
+    .cinema-btn-confirm { width: 100%; background: #962cf9; border: none; padding: 15px; color: #fff; font-weight: bold; border-radius: 12px; cursor: pointer; font-size: 16px; }
+#paymentOverlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 99999 !important; /* Очень высокий индекс */
+    background: rgba(0, 0, 0, 0.95) !important;
+    display: none; /* Покажет JS */
+    align-items: center;
+    justify-content: center;
+}
+</style>
+<div id="paymentOverlay" class="cinema-popup-wrap" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center;">
+    <div class="payment-box" style="background:#1a1a1a; padding:30px; border-radius:20px; width:350px; text-align:center; color:white; border:1px solid #333;">
+        <h3>Оплата билетов</h3>
+        <p id="paymentTotal" style="color:#962cf9; font-weight:bold; font-size:20px;"></p>
+        
+        <div style="margin-top:20px; text-align:left;">
+            <label style="font-size:12px; color:#666;">Номер карты</label>
+            <input type="text" placeholder="0000 0000 0000 0000" maxlength="19" style="width:100%; padding:12px; margin:8px 0; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+            
+            <div style="display:flex; gap:10px;">
+                <div style="flex:2;">
+                    <label style="font-size:12px; color:#666;">Срок</label>
+                    <input type="text" placeholder="ММ/ГГ" maxlength="5" style="width:100%; padding:12px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; color:#666;">CVC</label>
+                    <input type="password" placeholder="***" maxlength="3" style="width:100%; padding:12px; background:#222; border:1px solid #444; color:white; border-radius:8px;">
+                </div>
+            </div>
+        </div>
+
+        <button id="payBtn" onclick="processPayment()" style="width:100%; margin-top:25px; padding:15px; background:#962cf9; border:none; color:white; font-weight:bold; border-radius:10px; cursor:pointer;">
+            Оплатить сейчас
+        </button>
+        <button onclick="closePayment()" style="background:none; border:none; color:#666; margin-top:15px; cursor:pointer;">Отмена</button>
+    </div>
+</div>
+<script>
+let currentLimit = 1;
+let mySelection = []; // Храним объекты { r, s, el }
+
+function changeLimit(step) {
+    let next = currentLimit + step;
+    if (next >= 1 && next <= 5) {
+        currentLimit = next;
+        document.getElementById('limitVal').innerText = currentLimit;
+        // Если уменьшили — убираем лишнее
+        while (mySelection.length > currentLimit) {
+            const popped = mySelection.pop();
+            popped.el.classList.remove('selected');
+        }
+        renderBadges();
+    }
+}
+
+function renderBadges() {
+    const container = document.getElementById('selectedBadges');
+    if (mySelection.length === 0) {
+        container.innerHTML = '<em style="color: #666;">места не выбраны</em>';
+        return;
+    }
+    container.innerHTML = mySelection.map(item => 
+        `<div class="seat-badge">Ряд ${item.r}, Место ${item.s}</div>`
+    ).join('');
+}
+
+function book(time) {
+    document.getElementById("seatingOverlay").style.display = "block";
+    
+    const grid = document.getElementById("seatsGrid");
+    const labels = document.getElementById("rowLabels");
+    grid.innerHTML = "";
+    labels.innerHTML = "";
+    mySelection = [];
+    renderBadges();
+
+    for (let r = 1; r <= 7; r++) {
+        // Добавляем метку ряда слева
+        const lbl = document.createElement("div");
+        lbl.className = "row-num";
+        lbl.innerText = "Ряд " + r;
+        labels.appendChild(lbl);
+
+        // Добавляем кресла
+        for (let s = 1; s <= 15; s++) {
+            const seat = document.createElement("div");
+            seat.className = "seat-item";
+            
+            seat.onclick = function() {
+                const idx = mySelection.findIndex(x => x.el === this);
+                
+                if (idx !== -1) {
+                    this.classList.remove('selected');
+                    mySelection.splice(idx, 1);
+                } else {
+                    if (mySelection.length < currentLimit) {
+                        this.classList.add('selected');
+                        mySelection.push({ r, s, el: this });
+                    } else {
+                        alert("Вы выбрали максимум мест (" + currentLimit + ")");
+                    }
+                }
+                renderBadges();
+            };
+            grid.appendChild(seat);
+        }
+    }
+}
+
+function closeSeating() {
+    document.getElementById("seatingOverlay").style.display = "none";
+}
+
+const TICKET_PRICE = 2500; // Цена одного билета в рублях/тенге
+
+function confirmBooking() {
+    // Проверка, выбраны ли места
+    if (typeof mySelection === 'undefined' || mySelection.length === 0) {
+        alert("Пожалуйста, выберите хотя бы одно место.");
+        return;
+    }
+
+    // 1. Скрываем окно выбора мест (БЕЗ вызова closeSeating, чтобы не сработали лишние скрипты)
+    const seatingOverlay = document.getElementById("seatingOverlay");
+    if (seatingOverlay) seatingOverlay.style.display = "none";
+
+    // 2. Принудительно скрываем окно с фильмом (тот самый flex-container)
+    const moviePopup = document.querySelector(".cinema-flex-container");
+    if (moviePopup) moviePopup.style.setProperty('display', 'none', 'important');
+
+    // 3. Открываем окно оплаты
+    const paymentOverlay = document.getElementById("paymentOverlay");
+    if (paymentOverlay) {
+        paymentOverlay.style.display = "flex";
+        
+        // 4. Считаем итоговую сумму (убедитесь, что TICKET_PRICE объявлена выше, например let TICKET_PRICE = 500;)
+        const price = typeof TICKET_PRICE !== 'undefined' ? TICKET_PRICE : 2500;
+        const total = mySelection.length * price;
+        
+        const totalDisplay = document.getElementById("paymentTotal");
+        if (totalDisplay) totalDisplay.innerText = total + " тг";
+    }
+}
+
+function processPayment() {
+    const btn = document.getElementById("payBtn");
+    btn.disabled = true;
+    btn.innerText = "Обработка...";
+    btn.style.background = "#444";
+
+    // Имитация задержки банка (2 секунды)
+    setTimeout(() => {
+        alert("Оплата прошла успешно! Ваши билеты во вкладке 'мои билеты'.");
+        closePayment();
+        // Здесь можно добавить логику очистки выбранных мест
+        location.reload(); // Перезагрузка страницы для сброса
+    }, 2000);
+}
+
+function closePayment() {
+    document.getElementById("paymentOverlay").style.display = "none";
+}
+</script>
+</body>
+</html>
