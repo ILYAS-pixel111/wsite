@@ -80,7 +80,7 @@ box-shadow: 0 0 10px rgba(0,0,0,0.5);
   margin-bottom: 1vw; /* Отступ между инпутами и кнопкой */
   padding: 0.3vw;
   
-  color: white;
+  color: black;
   border-radius: 5px;
 }
 .modal-content button {
@@ -191,6 +191,23 @@ box-shadow: 0 0 10px rgba(0,0,0,0.5);
         </ul>
     </div>
 </div>
+<!-- Окно самого билета -->
+<div id="ticketOverlay" class="cinema-popup-wrap" style="display:none; align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:15px; width:300px; color:black; text-align:center;">
+        <h2 style="margin:0;">ВАШ БИЛЕТ</h2>
+        <hr>
+        <img id="ticketImg" src="" style="width:100%; border-radius:10px; margin:10px 0;">
+        <h3 id="ticketTitle" style="margin:5px 0;"></h3>
+        <p id="ticketDetails" style="font-size:14px; color:#555;"></p>
+        <div style="background:#eee; padding:10px; border:2px dashed #ccc; font-weight:bold; margin-top:10px;">
+            QR-КОД: #<span id="ticketID"></span>
+        </div>
+        <button onclick="document.getElementById('ticketOverlay').style.display='none'" style="margin-top:20px; width:100%; padding:10px; background:#962cf9; color:white; border:none; border-radius:10px; cursor:pointer;">Закрыть</button>
+    </div>
+</div>
+
+
+
 
    <div class="strelka" onclick="window.scrollTo({top:0,behavior:'smooth'})"><img src="icons8-стрелка-вверх-50.png"></a></div>
    <section class="palka"></section>
@@ -702,13 +719,15 @@ genreButtons.forEach(btn => {
 function toggleCinemaPopup(element) {
     const overlay = document.getElementById("cinemaOverlay");
     const dynamicImg = document.getElementById("dynamicPoster");
+    const moviePopup = document.querySelector(".cinema-flex-container"); // Находим контент
 
-    // Берем SRC картинки, на которую нажали, и ставим в модалку
+    // ВАЖНО: Возвращаем видимость контенту, который мы могли скрыть при проверке входа
+    if (moviePopup) moviePopup.style.display = "flex"; 
+
     dynamicImg.src = element.src;
-
-    // Показываем окно
     overlay.style.display = "block";
 }
+
 
 function closePopup() {
     document.getElementById("cinemaOverlay").style.display = "none";
@@ -1016,26 +1035,38 @@ function closeSeating() {
 const TICKET_PRICE = 2500; // Цена одного билета в рублях/тенге
 
 function confirmBooking() {
-    // Проверка, выбраны ли места
+    // 1. ПРОВЕРКА АВТОРИЗАЦИИ
+    if (btn.innerText === "Войти") {
+        // Сначала ПРЯЧЕМ все открытые окна (зал и фильм)
+        const seatingOverlay = document.getElementById("seatingOverlay");
+        const cinemaOverlay = document.getElementById("cinemaOverlay"); // Универсальное окно фильма
+        const moviePopup = document.querySelector(".cinema-flex-container");
+
+        if (seatingOverlay) seatingOverlay.style.display = "none";
+        if (cinemaOverlay) cinemaOverlay.style.display = "none";
+        if (moviePopup) moviePopup.style.display = "none";
+
+        // Теперь ОТКРЫВАЕМ только регистрацию
+        modal.style.display = "block"; 
+        
+        alert("Для продолжения необходимо войти в аккаунт");
+        return; // Останавливаем код, чтобы не открылась оплата
+    }
+
+    // 2. ПРОВЕРКА МЕСТ (если вошел)
     if (typeof mySelection === 'undefined' || mySelection.length === 0) {
         alert("Пожалуйста, выберите хотя бы одно место.");
         return;
     }
 
-    // 1. Скрываем окно выбора мест (БЕЗ вызова closeSeating, чтобы не сработали лишние скрипты)
+    // 3. ПЕРЕХОД К ОПЛАТЕ (если всё успешно)
     const seatingOverlay = document.getElementById("seatingOverlay");
     if (seatingOverlay) seatingOverlay.style.display = "none";
 
-    // 2. Принудительно скрываем окно с фильмом (тот самый flex-container)
-    const moviePopup = document.querySelector(".cinema-flex-container");
-    if (moviePopup) moviePopup.style.setProperty('display', 'none', 'important');
-
-    // 3. Открываем окно оплаты
     const paymentOverlay = document.getElementById("paymentOverlay");
     if (paymentOverlay) {
         paymentOverlay.style.display = "flex";
         
-        // 4. Считаем итоговую сумму (убедитесь, что TICKET_PRICE объявлена выше, например let TICKET_PRICE = 500;)
         const price = typeof TICKET_PRICE !== 'undefined' ? TICKET_PRICE : 2500;
         const total = mySelection.length * price;
         
@@ -1044,24 +1075,117 @@ function confirmBooking() {
     }
 }
 
+
+
+let myTickets = []; 
+
+// 1. Функция Оплаты
 function processPayment() {
-    const btn = document.getElementById("payBtn");
-    btn.disabled = true;
-    btn.innerText = "Обработка...";
-    btn.style.background = "#444";
+    const payBtn = document.getElementById("payBtn");
+    if (!payBtn) return;
 
-    // Имитация задержки банка (2 секунды)
+    payBtn.disabled = true;
+    payBtn.innerText = "Обработка...";
+
     setTimeout(() => {
-        alert("Оплата прошла успешно! Ваши билеты во вкладке 'мои билеты'.");
-        closePayment();
-        // Здесь можно добавить логику очистки выбранных мест
-        location.reload(); // Перезагрузка страницы для сброса
-    }, 2000);
+        // Собираем данные билета
+        const movieTitle = document.getElementById("popupTitle")?.innerText || "Фильм";
+        const movieImg = document.getElementById("dynamicPoster")?.src || "";
+        const seatInfo = (typeof mySelection !== 'undefined' && mySelection.length > 0)
+            ? mySelection.map(item => `Ряд ${item.r}, Место ${item.s}`).join('; ')
+            : "Места не выбраны";
+
+        const newTicket = {
+            id: Math.floor(1000 + Math.random() * 9000),
+            title: movieTitle,
+            img: movieImg,
+            details: seatInfo
+        };
+
+        // Сохраняем билет в массив (он сотрется при перезагрузке, если не использовать localStorage)
+        // Чтобы билеты КРАТКОСРОЧНО выжили после перезагрузки, используем sessionStorage:
+        let savedTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
+        savedTickets.push(newTicket);
+        sessionStorage.setItem('tempTickets', JSON.stringify(savedTickets));
+
+        alert("Оплата прошла! Сейчас вы вернетесь на главную.");
+        
+        // ГЛАВНЫЙ ШАГ: Полная перезагрузка страницы на главный экран
+        window.location.reload(); 
+
+    }, 1500);
 }
 
-function closePayment() {
-    document.getElementById("paymentOverlay").style.display = "none";
+// 2. Обновление списка (вызываем при загрузке страницы)
+function updateTicketList() {
+    const container = document.querySelector(".menu-content ul");
+    if (!container) return;
+
+    // Загружаем билеты из временного хранилища (чтобы они не пропадали после релоада)
+    myTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
+
+    container.innerHTML = '<li><b>Мои билеты:</b></li>';
+
+    myTickets.forEach((ticket, index) => {
+        const li = document.createElement("li");
+        li.style.cssText = "cursor:pointer; padding:10px 0; border-bottom:1px solid #eee; color:#962cf9;";
+        li.innerText = `🎬 ${ticket.title}`;
+        li.onclick = () => showTicket(index);
+        container.appendChild(li);
+    });
 }
+
+// 3. Показ билета
+function showTicket(index) {
+    const tickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
+    const ticket = tickets[index];
+    const overlay = document.getElementById("ticketOverlay");
+    
+    if (!ticket || !overlay) return;
+
+    document.getElementById("ticketImg").src = ticket.img;
+    document.getElementById("ticketTitle").innerText = ticket.title;
+    document.getElementById("ticketDetails").innerText = ticket.details;
+    document.getElementById("ticketID").innerText = ticket.id;
+
+    overlay.style.display = "flex";
+    if (typeof toggleMenu === 'function') toggleMenu();
+}
+
+// 4. Логика при загрузке (Проверяем логин и рисуем билеты)
+window.addEventListener('load', () => {
+    updateTicketList(); // Сразу рисуем билеты, если они были куплены
+
+    const savedName = localStorage.getItem('userLoggedIn');
+    const loginBtn = document.getElementById("loginBtn");
+    
+    if (savedName && loginBtn) {
+        loginBtn.innerText = "Выйти";
+        const display = document.getElementById("display");
+        if (display) {
+            display.innerText = "Привет! " + savedName;
+            display.style.display = "block";
+        }
+    }
+});
+
+// 5. Кнопка выхода (Кидает на главную)
+const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) {
+    loginBtn.onclick = function() {
+        if (this.innerText === "Выйти") {
+            localStorage.removeItem('userLoggedIn');
+            sessionStorage.removeItem('tempTickets'); // Стираем билеты при выходе
+            window.location.href = window.location.origin + window.location.pathname; // На главную
+        } else {
+            if (typeof openLoginModal === 'function') openLoginModal();
+        }
+    };
+}
+
+
 </script>
+
+
 </body>
 </html>
