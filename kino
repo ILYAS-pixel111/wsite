@@ -1034,52 +1034,44 @@ function closeSeating() {
 
 const TICKET_PRICE = 2500; // Цена одного билета в рублях/тенге
 
+// --- 1. Функция подтверждения бронирования ---
 function confirmBooking() {
-    // 1. ПРОВЕРКА АВТОРИЗАЦИИ
-    if (btn.innerText === "Войти") {
-        // Сначала ПРЯЧЕМ все открытые окна (зал и фильм)
+    const loginBtn = document.getElementById("loginBtn");
+    
+    // Проверяем, авторизован ли пользователь (по тексту кнопки или localStorage)
+    if (loginBtn && loginBtn.innerText === "Войти") {
         const seatingOverlay = document.getElementById("seatingOverlay");
-        const cinemaOverlay = document.getElementById("cinemaOverlay"); // Универсальное окно фильма
-        const moviePopup = document.querySelector(".cinema-flex-container");
-
+        const cinemaOverlay = document.getElementById("cinemaOverlay");
+        
         if (seatingOverlay) seatingOverlay.style.display = "none";
         if (cinemaOverlay) cinemaOverlay.style.display = "none";
-        if (moviePopup) moviePopup.style.display = "none";
 
-        // Теперь ОТКРЫВАЕМ только регистрацию
-        modal.style.display = "block"; 
-        
+        if (typeof modal !== 'undefined') modal.style.display = "block"; 
         alert("Для продолжения необходимо войти в аккаунт");
-        return; // Останавливаем код, чтобы не открылась оплата
+        return;
     }
 
-    // 2. ПРОВЕРКА МЕСТ (если вошел)
     if (typeof mySelection === 'undefined' || mySelection.length === 0) {
         alert("Пожалуйста, выберите хотя бы одно место.");
         return;
     }
 
-    // 3. ПЕРЕХОД К ОПЛАТЕ (если всё успешно)
     const seatingOverlay = document.getElementById("seatingOverlay");
     if (seatingOverlay) seatingOverlay.style.display = "none";
 
     const paymentOverlay = document.getElementById("paymentOverlay");
     if (paymentOverlay) {
         paymentOverlay.style.display = "flex";
-        
-        const price = typeof TICKET_PRICE !== 'undefined' ? TICKET_PRICE : 2500;
+        const price = 2500;
         const total = mySelection.length * price;
-        
         const totalDisplay = document.getElementById("paymentTotal");
         if (totalDisplay) totalDisplay.innerText = total + " тг";
     }
 }
 
-
-
 let myTickets = []; 
 
-// 1. Функция Оплаты
+// --- 2. Функция Оплаты ---
 function processPayment() {
     const payBtn = document.getElementById("payBtn");
     if (!payBtn) return;
@@ -1088,7 +1080,6 @@ function processPayment() {
     payBtn.innerText = "Обработка...";
 
     setTimeout(() => {
-        // Собираем данные билета
         const movieTitle = document.getElementById("popupTitle")?.innerText || "Фильм";
         const movieImg = document.getElementById("dynamicPoster")?.src || "";
         const seatInfo = (typeof mySelection !== 'undefined' && mySelection.length > 0)
@@ -1102,28 +1093,24 @@ function processPayment() {
             details: seatInfo
         };
 
-        // Сохраняем билет в массив (он сотрется при перезагрузке, если не использовать localStorage)
-        // Чтобы билеты КРАТКОСРОЧНО выжили после перезагрузки, используем sessionStorage:
+        // Сохраняем билет
         let savedTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
         savedTickets.push(newTicket);
         sessionStorage.setItem('tempTickets', JSON.stringify(savedTickets));
 
         alert("Оплата прошла! Сейчас вы вернетесь на главную.");
         
-        // ГЛАВНЫЙ ШАГ: Полная перезагрузка страницы на главный экран
+        // ПЕРЕЗАГРУЗКА: Состояние логина сохранится благодаря localStorage, который мы проверим при Load
         window.location.reload(); 
-
     }, 1500);
 }
 
-// 2. Обновление списка (вызываем при загрузке страницы)
+// --- 3. Обновление списка билетов ---
 function updateTicketList() {
     const container = document.querySelector(".menu-content ul");
     if (!container) return;
 
-    // Загружаем билеты из временного хранилища (чтобы они не пропадали после релоада)
     myTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
-
     container.innerHTML = '<li><b>Мои билеты:</b></li>';
 
     myTickets.forEach((ticket, index) => {
@@ -1135,7 +1122,7 @@ function updateTicketList() {
     });
 }
 
-// 3. Показ билета
+// --- 4. Показ билета ---
 function showTicket(index) {
     const tickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
     const ticket = tickets[index];
@@ -1152,38 +1139,38 @@ function showTicket(index) {
     if (typeof toggleMenu === 'function') toggleMenu();
 }
 
-// 4. Логика при загрузке (Проверяем логин и рисуем билеты)
+// --- 5. Логика при загрузке страницы (КЛЮЧЕВОЙ МОМЕНТ) ---
 window.addEventListener('load', () => {
-    updateTicketList(); // Сразу рисуем билеты, если они были куплены
+    updateTicketList();
 
     const savedName = localStorage.getItem('userLoggedIn');
     const loginBtn = document.getElementById("loginBtn");
+    const display = document.getElementById("display");
     
     if (savedName && loginBtn) {
+        // Если в памяти есть имя, принудительно ставим "Выйти"
         loginBtn.innerText = "Выйти";
-        const display = document.getElementById("display");
         if (display) {
             display.innerText = "Привет! " + savedName;
             display.style.display = "block";
         }
+    } else if (loginBtn) {
+        loginBtn.innerText = "Войти";
     }
 });
 
-// 5. Кнопка выхода (Кидает на главную)
-const loginBtn = document.getElementById("loginBtn");
-if (loginBtn) {
-    loginBtn.onclick = function() {
-        if (this.innerText === "Выйти") {
+// --- 6. Кнопка выхода/входа ---
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'loginBtn') {
+        if (e.target.innerText === "Выйти") {
             localStorage.removeItem('userLoggedIn');
-            sessionStorage.removeItem('tempTickets'); // Стираем билеты при выходе
-            window.location.href = window.location.origin + window.location.pathname; // На главную
+            sessionStorage.removeItem('tempTickets'); 
+            window.location.reload();
         } else {
             if (typeof openLoginModal === 'function') openLoginModal();
         }
-    };
-}
-
-
+    }
+});
 </script>
 
 
