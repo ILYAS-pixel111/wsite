@@ -164,7 +164,7 @@ box-shadow: 0 0 10px rgba(0,0,0,0.5);
 <body>
    <header class="header1">
 <div class="text-KinoWatch">KinoWatch</div>
-<div class="btn-login" id="openReg">Войти</div>
+<div class="btn-login" id="loginBtn">Войти</div>
 <div id="accountName" style="display: none; font-weight: bold;"></div>
 <img class="avatar" id="userAvatar" src="/png-klev-club-2a76-p-tri-poloski-menyu-png-11.png" onclick="toggleMenu()" style="display: none; width: 4.5vw; height: 4.5vw; border-radius: 50%;">
 <div id="regModal" class="modal">
@@ -1035,27 +1035,31 @@ function closeSeating() {
 const TICKET_PRICE = 2500; // Цена одного билета в рублях/тенге
 
 // --- 1. Функция подтверждения бронирования ---
+// --- 1. Функция подтверждения бронирования ---
 function confirmBooking() {
-    const loginBtn = document.getElementById("loginBtn");
+    const isLogged = localStorage.getItem('userLoggedIn');
     
-    // Проверяем, авторизован ли пользователь (по тексту кнопки или localStorage)
-    if (loginBtn && loginBtn.innerText === "Войти") {
+    // Если НЕ залогинен — кидаем на регистрацию
+    if (!isLogged) {
         const seatingOverlay = document.getElementById("seatingOverlay");
         const cinemaOverlay = document.getElementById("cinemaOverlay");
-        
+        const regModal = document.getElementById("regModal");
+
         if (seatingOverlay) seatingOverlay.style.display = "none";
         if (cinemaOverlay) cinemaOverlay.style.display = "none";
+        if (regModal) regModal.style.display = "block";
 
-        if (typeof modal !== 'undefined') modal.style.display = "block"; 
         alert("Для продолжения необходимо войти в аккаунт");
         return;
     }
 
+    // Проверка выбора мест
     if (typeof mySelection === 'undefined' || mySelection.length === 0) {
         alert("Пожалуйста, выберите хотя бы одно место.");
         return;
     }
 
+    // Переход к оплате
     const seatingOverlay = document.getElementById("seatingOverlay");
     if (seatingOverlay) seatingOverlay.style.display = "none";
 
@@ -1068,8 +1072,6 @@ function confirmBooking() {
         if (totalDisplay) totalDisplay.innerText = total + " тг";
     }
 }
-
-let myTickets = []; 
 
 // --- 2. Функция Оплаты ---
 function processPayment() {
@@ -1093,24 +1095,35 @@ function processPayment() {
             details: seatInfo
         };
 
-        // Сохраняем билет
         let savedTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
         savedTickets.push(newTicket);
         sessionStorage.setItem('tempTickets', JSON.stringify(savedTickets));
 
         alert("Оплата прошла! Сейчас вы вернетесь на главную.");
-        
-        // ПЕРЕЗАГРУЗКА: Состояние логина сохранится благодаря localStorage, который мы проверим при Load
         window.location.reload(); 
     }, 1500);
 }
 
-// --- 3. Обновление списка билетов ---
+// --- 3. Обработка Формы Регистрации ---
+const regForm = document.querySelector('#regModal form');
+if (regForm) {
+    regForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById("userName").value;
+        if (name) {
+            localStorage.setItem('userLoggedIn', name);
+            alert("Регистрация успешна!");
+            window.location.reload();
+        }
+    });
+}
+
+// --- 4. Обновление списка билетов ---
 function updateTicketList() {
     const container = document.querySelector(".menu-content ul");
     if (!container) return;
 
-    myTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
+    const myTickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
     container.innerHTML = '<li><b>Мои билеты:</b></li>';
 
     myTickets.forEach((ticket, index) => {
@@ -1122,44 +1135,29 @@ function updateTicketList() {
     });
 }
 
-// --- 4. Показ билета ---
-function showTicket(index) {
-    const tickets = JSON.parse(sessionStorage.getItem('tempTickets') || "[]");
-    const ticket = tickets[index];
-    const overlay = document.getElementById("ticketOverlay");
-    
-    if (!ticket || !overlay) return;
-
-    document.getElementById("ticketImg").src = ticket.img;
-    document.getElementById("ticketTitle").innerText = ticket.title;
-    document.getElementById("ticketDetails").innerText = ticket.details;
-    document.getElementById("ticketID").innerText = ticket.id;
-
-    overlay.style.display = "flex";
-    if (typeof toggleMenu === 'function') toggleMenu();
-}
-
-// --- 5. Логика при загрузке страницы (КЛЮЧЕВОЙ МОМЕНТ) ---
+// --- 5. Логика при загрузке (Аватар и Кнопки) ---
 window.addEventListener('load', () => {
     updateTicketList();
 
     const savedName = localStorage.getItem('userLoggedIn');
-    const loginBtn = document.getElementById("loginBtn");
-    const display = document.getElementById("display");
+    const loginBtn = document.getElementById("loginBtn"); // Убедитесь, что в HTML ID="loginBtn"
+    const accountName = document.getElementById("accountName");
+    const userAvatar = document.getElementById("userAvatar");
     
-    if (savedName && loginBtn) {
-        // Если в памяти есть имя, принудительно ставим "Выйти"
-        loginBtn.innerText = "Выйти";
-        if (display) {
-            display.innerText = "Привет! " + savedName;
-            display.style.display = "block";
+    if (savedName) {
+        if (loginBtn) loginBtn.innerText = "Выйти";
+        if (accountName) {
+            accountName.innerText = "Привет, " + savedName;
+            accountName.style.display = "block";
         }
-    } else if (loginBtn) {
-        loginBtn.innerText = "Войти";
+        if (userAvatar) userAvatar.style.display = "block"; // ПОКАЗЫВАЕМ ФОТО
+    } else {
+        if (loginBtn) loginBtn.innerText = "Войти";
+        if (userAvatar) userAvatar.style.display = "none";
     }
 });
 
-// --- 6. Кнопка выхода/входа ---
+// --- 6. Клик по кнопке Войти/Выйти ---
 document.addEventListener('click', function(e) {
     if (e.target && e.target.id === 'loginBtn') {
         if (e.target.innerText === "Выйти") {
@@ -1167,10 +1165,18 @@ document.addEventListener('click', function(e) {
             sessionStorage.removeItem('tempTickets'); 
             window.location.reload();
         } else {
-            if (typeof openLoginModal === 'function') openLoginModal();
+            const regModal = document.getElementById("regModal");
+            if (regModal) regModal.style.display = "block";
         }
     }
+    
+    // Закрытие модалки на крестик
+    if (e.target && e.target.classList.contains('close-btn')) {
+        const regModal = document.getElementById("regModal");
+        if (regModal) regModal.style.display = "none";
+    }
 });
+
 </script>
 
 
